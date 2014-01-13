@@ -155,4 +155,7 @@
         <item name="android:paddingLeft">@dimen/dismiss_button_padding_start</item>
         <item name="android:paddingRight">@dimen/dismiss_button_padding_end</item>
     </style>
+
+    <style name="SettingsTheme" parent="@*android:style/Theme.Holo.Light" />
+
 </resources>
