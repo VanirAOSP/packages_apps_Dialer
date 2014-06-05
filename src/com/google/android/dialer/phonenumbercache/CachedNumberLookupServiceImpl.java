@@ -163,6 +163,11 @@ public class CachedNumberLookupServiceImpl implements CachedNumberLookupService 
     }
 
     @Override
+    public boolean isBusiness(int sourceType) {
+        return CachedContactInfoImpl.isBusiness(sourceType);
+    }
+
+    @Override
     public CachedContactInfoImpl lookupCachedContactFromNumber(Context context, String number) {
         Cursor query = context.getContentResolver().query(
                 PhoneNumberCacheContract.getContactLookupUri(number),
