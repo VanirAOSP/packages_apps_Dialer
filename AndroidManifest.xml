@@ -56,6 +56,7 @@
     <uses-permission android:name="android.permission.STOP_APP_SWITCHES" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="com.qti.permission.DIAG" />
+    <uses-permission android:name="com.qti.permission.IMS" />
 
     <!-- Google Dialer -->
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
