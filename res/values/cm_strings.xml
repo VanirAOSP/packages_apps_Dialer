@@ -77,6 +77,7 @@
     <string name="menu_add_to_blacklist">Add to blacklist</string>
     <string name="toast_added_to_blacklist">%s added to blacklist.</string>
 
+<<<<<<< HEAD
     <!--  for speed dial -->
     <string name="speed_dial_settings">Speed dial settings</string>
     <string name="speed_dial_not_set">(not set)</string>
@@ -97,4 +98,14 @@
     <string name="incall_vibrate_hangup_title">Vibrate on hang up</string>
     <string name="incall_vibrate_45_title">Vibrate every minute</string>
     <string name="incall_vibrate_45_summary">Vibrates at the 45 second mark of every minute during outgoing calls</string>
+=======
+    <!-- Forward lookup -->
+    <string name="nearby_places">Nearby places</string>
+    <string name="people">People</string>
+
+    <string name="start_call_playback">Play recording</string>
+    <string name="stop_call_playback">Stop</string>
+    <string name="call_playback_error_message">Failed to play recording</string>
+
+>>>>>>> df7f323... Call recording service implementation, show recordings and allow playback in call history
 </resources>
