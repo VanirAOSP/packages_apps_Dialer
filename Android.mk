@@ -12,7 +12,7 @@ res_dirs := res $(contacts_common_dir)/res $(incallui_dir)/res
 # Google Play Services resource files
 res_dirs += ../../../external/google/google_play_services/libproject/google-play-services_lib/res
 
-LOCAL_SRC_FILES := $(call all-java-files-under, $(src_dirs))
+LOCAL_SRC_FILES := $(call all-java-files-under, $(src_dirs)) $(call all-Iaidl-files-under, $(src_dirs))
 LOCAL_RESOURCE_DIR := $(addprefix $(LOCAL_PATH)/, $(res_dirs))
 LOCAL_ASSET_DIR := $(LOCAL_PATH)/assets
 

@@ -70,4 +70,8 @@
     <string name="local_search_setting_off">Off</string>
     <string name="local_search_settings_text">When you search from the phone app, this feature will use your location to find nearby places that match your query, even if they are not in your contacts. &lt;br>&lt;br> Data being used in these features is provided by Google and its licensors. &lt;br>&lt;a href=%1$s>Learn more.&lt;/a> &lt;br>&lt;br> You must enable Google apps to use your phone’s location for this to work. &lt;br>&lt;a href=%2$s>Learn more.&lt;/a></string>
 
+    <string name="start_call_playback">Play recording</string>
+    <string name="stop_call_playback">Stop</string>
+    <string name="call_playback_error_message">Failed to play recording</string>
+
 </resources>
