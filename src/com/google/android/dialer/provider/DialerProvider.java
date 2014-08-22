@@ -353,39 +353,44 @@ public class DialerProvider extends ContentProvider {
     }
 
     private Location getLastLocation() {
-        LocationManager locationManager =
-                (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
-        locationManager.requestSingleUpdate(new Criteria(), new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                if (Log.isLoggable("DialerProvider", Log.VERBOSE)) {
-                    Log.v("DialerProvider", "onLocationChanged: " + location);
+        try {
+            LocationManager locationManager =
+                    (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
+            locationManager.requestSingleUpdate(new Criteria(), new LocationListener() {
+                @Override
+                public void onLocationChanged(Location location) {
+                    if (Log.isLoggable("DialerProvider", Log.VERBOSE)) {
+                        Log.v("DialerProvider", "onLocationChanged: " + location);
+                    }
                 }
-            }
 
-            @Override
-            public void onProviderDisabled(String provider) {
-                if (Log.isLoggable("DialerProvider", Log.VERBOSE)) {
-                    Log.v("DialerProvider", "onProviderDisabled: " + provider);
+                @Override
+                public void onProviderDisabled(String provider) {
+                    if (Log.isLoggable("DialerProvider", Log.VERBOSE)) {
+                        Log.v("DialerProvider", "onProviderDisabled: " + provider);
+                    }
                 }
-            }
 
-            @Override
-            public void onProviderEnabled(String provider) {
-                if (Log.isLoggable("DialerProvider", Log.VERBOSE)) {
-                    Log.v("DialerProvider", "onProviderEnabled: " + provider);
+                @Override
+                public void onProviderEnabled(String provider) {
+                    if (Log.isLoggable("DialerProvider", Log.VERBOSE)) {
+                        Log.v("DialerProvider", "onProviderEnabled: " + provider);
+                    }
                 }
-            }
 
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-                if (Log.isLoggable("DialerProvider", Log.VERBOSE)) {
-                    Log.v("DialerProvider", "onStatusChanged: "
-                            + provider + ", " + status + ", " + extras);
+                @Override
+                public void onStatusChanged(String provider, int status, Bundle extras) {
+                    if (Log.isLoggable("DialerProvider", Log.VERBOSE)) {
+                        Log.v("DialerProvider", "onStatusChanged: "
+                                + provider + ", " + status + ", " + extras);
+                    }
                 }
-            }
-        }, DialerProvider.mLooper);
-        return locationManager.getLastLocation();
+            }, DialerProvider.mLooper);
+            return locationManager.getLastLocation();
+        } catch(IllegalArgumentException iae) {
+            Log.e(TAG,iae);
+            return null;
+        }
     }
 
     private int getRandomInteger(int n) {
