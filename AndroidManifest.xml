@@ -84,7 +84,7 @@
             android:clearTaskOnLaunch="true"
             android:icon="@mipmap/ic_launcher_phone"
             android:screenOrientation="portrait"
-            android:enabled="@*android:bool/config_enableNetworkLocationOverlay"
+            android:enabled="@*android:bool/config_voice_capable"
             android:windowSoftInputMode="stateAlwaysHidden|adjustNothing">
             <intent-filter>
                 <action android:name="android.intent.action.DIAL" />
