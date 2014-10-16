@@ -253,31 +253,26 @@ public class LookupProvider extends ContentProvider {
         LocationManager locationManager = (LocationManager)
                 getContext().getSystemService(Context.LOCATION_SERVICE);
 
-        try {
-            locationManager.requestSingleUpdate(new Criteria(),
-                    new LocationListener() {
-                @Override
-                public void onLocationChanged(Location location) {
-                }
+        locationManager.requestSingleUpdate(new Criteria(),
+                new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+            }
 
-                @Override
-                public void onProviderDisabled(String provider) {
-                }
+            @Override
+            public void onProviderDisabled(String provider) {
+            }
 
-                @Override
-                public void onProviderEnabled(String provider) {
-                }
+            @Override
+            public void onProviderEnabled(String provider) {
+            }
 
-                @Override
-                public void onStatusChanged(String provider, int status, Bundle extras) {
-                }
-            }, Looper.getMainLooper());
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+        }, Looper.getMainLooper());
 
-            return locationManager.getLastLocation();
-        } catch (IllegalArgumentException e) {
-            // If no location service exists, IllegalArgument exception is thrown
-            return null;
-        }
+        return locationManager.getLastLocation();
     }
 
     /**
