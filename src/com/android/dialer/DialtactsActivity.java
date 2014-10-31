@@ -115,9 +115,6 @@ public class DialtactsActivity extends TransactionSafeActivity implements View.O
     public static final String SHARED_PREFS_NAME = "com.android.dialer_preferences";
 
     public static final String PREFERRED_SIM_ICON_INDEX = "preferred_sim_icon_index";
-    public static final String[] MULTI_SIM_NAME = {
-        "perferred_name_sub1", "perferred_name_sub2"
-    };
 
 
     /** Used to open Call Setting */
@@ -1113,12 +1110,8 @@ public class DialtactsActivity extends TransactionSafeActivity implements View.O
             return null;
         }
 
-        String name = Settings.System.getString(context.getContentResolver(),
-                MULTI_SIM_NAME[subscription]);
-        if (TextUtils.isEmpty(name)) {
-            return context.getString(R.string.multi_sim_slot_name, subscription + 1);
-        }
-        return name;
+        return Settings.Global.getSimNameForSubscription(context, subscription,
+                context.getString(R.string.multi_sim_slot_name, subscription + 1));
     }
 
     /**
