@@ -17,14 +17,7 @@ res_dirs := res \
     $(contacts_common_dir)/res \
     $(phone_common_dir)/res
 
-<<<<<<< HEAD
-LOCAL_SRC_FILES := $(call all-java-files-under, $(src_dirs))
-=======
 LOCAL_SRC_FILES := $(call all-java-files-under, $(src_dirs)) $(call all-Iaidl-files-under, $(src_dirs))
-LOCAL_SRC_FILES += ../../providers/ContactsProvider/src/com/android/providers/contacts/NameSplitter.java \
-                   ../../providers/ContactsProvider/src/com/android/providers/contacts/HanziToPinyin.java \
-                   ../../providers/ContactsProvider/src/com/android/providers/contacts/util/NeededForTesting.java
->>>>>>> df7f323... Call recording service implementation, show recordings and allow playback in call history
 LOCAL_RESOURCE_DIR := $(addprefix $(LOCAL_PATH)/, $(res_dirs))
 LOCAL_ASSET_DIR := $(LOCAL_PATH)/assets
 

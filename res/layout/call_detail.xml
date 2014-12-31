@@ -15,25 +15,7 @@
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-<<<<<<< HEAD
     android:layout_height="match_parent" >
-=======
-    android:layout_height="match_parent"
-    android:visibility="gone"
->
-    <!--
-      The list view is under everything.
-      It contains a first header element which is hidden under the controls UI.
-      When scrolling, the controls move up until the name bar hits the top.
-      -->
-    <ListView
-        android:id="@+id/history"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-    />
->>>>>>> df7f323... Call recording service implementation, show recordings and allow playback in call history
 
     <LinearLayout
         android:id="@+id/call_detail"

@@ -65,21 +65,15 @@ import com.android.dialer.calllog.PhoneNumberDisplayHelper;
 import com.android.dialer.calllog.PhoneNumberUtilsWrapper;
 import com.android.dialer.util.AsyncTaskExecutor;
 import com.android.dialer.util.AsyncTaskExecutors;
-<<<<<<< HEAD
 import com.android.dialer.util.DialerUtils;
-=======
 import com.android.dialer.util.CallRecordingPlayer;
->>>>>>> df7f323... Call recording service implementation, show recordings and allow playback in call history
 import com.android.dialer.voicemail.VoicemailPlaybackFragment;
 import com.android.dialer.voicemail.VoicemailStatusHelper;
 import com.android.dialer.voicemail.VoicemailStatusHelper.StatusMessage;
 import com.android.dialer.voicemail.VoicemailStatusHelperImpl;
-<<<<<<< HEAD
 import com.android.dialerbind.analytics.AnalyticsActivity;
 import com.android.internal.telephony.PhoneConstants;
-=======
 import com.android.services.callrecorder.CallRecordingDataStore;
->>>>>>> df7f323... Call recording service implementation, show recordings and allow playback in call history
 
 import java.util.List;
 
@@ -455,56 +449,10 @@ public class CallDetailActivity extends AnalyticsActivity implements ProximitySe
                 mHasRemoveFromCallLogOption = !hasVoicemail();
                 invalidateOptionsMenu();
 
-<<<<<<< HEAD
                 if (hasVoicemail() && !TextUtils.isEmpty(firstDetails.transcription)) {
                     mVoicemailTranscription.setText(firstDetails.transcription);
                     mVoicemailTranscription.setVisibility(View.VISIBLE);
                 }
-=======
-                ListView historyList = (ListView) findViewById(R.id.history);
-                historyList.setAdapter(
-                        new CallDetailHistoryAdapter(CallDetailActivity.this, mInflater,
-                                mCallTypeHelper, details, hasVoicemail(),
-                                mCallDetailHeader.canPlaceCallsTo(),
-                                findViewById(R.id.controls),
-                                mCallRecordingDataStore, mCallRecordingPlayer));
-                BackScrollManager.bind(
-                        new ScrollableHeader() {
-                            private View mControls = findViewById(R.id.controls);
-                            private View mPhoto = findViewById(R.id.contact_background_sizer);
-                            private View mHeader = findViewById(R.id.photo_text_bar);
-                        private View mSeparator = findViewById(R.id.separator);
-
-                            @Override
-                            public void setOffset(int offset) {
-                                mControls.setY(-offset);
-                            }
-
-                            @Override
-                            public int getMaximumScrollableHeaderOffset() {
-                                // We can scroll the photo out, but we should keep the header if
-                                // present.
-                                if (mHeader.getVisibility() == View.VISIBLE) {
-                                    return mPhoto.getHeight() - mHeader.getHeight();
-                                } else {
-                                    // If the header is not present, we should also scroll out the
-                                    // separator line.
-                                    return mPhoto.getHeight() + mSeparator.getHeight();
-                                }
-                            }
-                        },
-                        historyList);
-                final CharSequence displayNumber =
-                        mPhoneNumberHelper.getDisplayNumber(
-                                firstDetails.number,
-                                firstDetails.numberPresentation,
-                                firstDetails.formattedNumber);
-
-                final String displayNameForDefaultImage = TextUtils.isEmpty(firstDetails.name) ?
-                        displayNumber.toString() : firstDetails.name.toString();
-
-                final String lookupKey = ContactInfoHelper.getLookupKeyFromUri(firstDetails.contactUri);
->>>>>>> df7f323... Call recording service implementation, show recordings and allow playback in call history
 
                 final boolean isBusiness = mContactInfoHelper.isBusiness(firstDetails.sourceType);
 
@@ -516,7 +464,8 @@ public class CallDetailActivity extends AnalyticsActivity implements ProximitySe
                 ListView historyList = (ListView) findViewById(R.id.history);
                 historyList.setAdapter(
                         new CallDetailHistoryAdapter(CallDetailActivity.this, mInflater,
-                                mCallTypeHelper, details));
+                                mCallTypeHelper, details,
+                                mCallRecordingDataStore, mCallRecordingPlayer));
                 mCallDetailHeader.loadContactPhotos(firstDetails, contactType);
                 findViewById(R.id.call_detail).setVisibility(View.VISIBLE);
             }
