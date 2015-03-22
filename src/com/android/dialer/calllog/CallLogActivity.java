@@ -33,6 +33,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.ViewGroup;
 import android.widget.SearchView;
 import android.widget.SearchView.OnCloseListener;
 import android.widget.SearchView.OnQueryTextListener;
@@ -80,10 +81,27 @@ public class CallLogActivity extends AnalyticsActivity implements
                     mMSimCallsFragment.setHasOptionsMenu(true);
                     return mMSimCallsFragment;
                 case TAB_INDEX_MSIM_STATS:
-                    mStatsFragment = new CallStatsFragment();
-                    return mStatsFragment;
+                    return new CallStatsFragment();
             }
             throw new IllegalStateException("No fragment at position " + position);
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            final CallLogFragment fragment =
+                    (CallLogFragment) super.instantiateItem(container, position);
+            switch (position) {
+                case TAB_INDEX_ALL:
+                    mAllCallsFragment = fragment;
+                    break;
+                case TAB_INDEX_MISSED:
+                    mMissedCallsFragment = fragment;
+                    break;
+                case TAB_INDEX_VOICEMAIL:
+                    mVoicemailFragment = fragment;
+                    break;
+            }
+            return fragment;
         }
 
         @Override

@@ -34,6 +34,7 @@ import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.RawContacts;
 import android.provider.VoicemailContract.Voicemails;
 import android.telecom.PhoneAccount;
+import android.telephony.SubscriptionManager;
 import android.telecom.PhoneAccountHandle;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
@@ -411,6 +412,8 @@ public class CallDetailActivity extends AnalyticsActivity implements ProximitySe
                 PhoneCallDetails firstDetails = details[0];
                 mNumber = firstDetails.number.toString();
                 final int numberPresentation = firstDetails.numberPresentation;
+                final int subId = firstDetails.accountId;
+
                 // Set the details header, based on the first phone call.
                 mCallDetailHeader.updateViews(firstDetails);
 
@@ -418,7 +421,7 @@ public class CallDetailActivity extends AnalyticsActivity implements ProximitySe
                 final boolean canPlaceCallsTo =
                     PhoneNumberUtilsWrapper.canPlaceCallsTo(mNumber, numberPresentation);
                 final PhoneNumberUtilsWrapper phoneUtils = new PhoneNumberUtilsWrapper();
-                final boolean isVoicemailNumber = phoneUtils.isVoicemailNumber(mNumber);
+                final boolean isVoicemailNumber = phoneUtils.isVoicemailNumber(subId, mNumber);
                 final boolean isSipNumber = phoneUtils.isSipNumber(mNumber);
 
                 mHasEditNumberBeforeCallOption =
@@ -491,6 +494,11 @@ public class CallDetailActivity extends AnalyticsActivity implements ProximitySe
                     PhoneAccountUtils.getAccount(
                     callCursor.getString(ACCOUNT_COMPONENT_NAME),
                     callCursor.getString(ACCOUNT_ID)));
+            String accId = callCursor.getString(ACCOUNT_ID);
+            int subId = SubscriptionManager.DEFAULT_SUBSCRIPTION_ID;
+            if (accId!=null && !accId.equals("E") && !accId.toLowerCase().contains("sip")) {
+                subId = Integer.parseInt(accId);
+            }
 
             if (TextUtils.isEmpty(countryIso)) {
                 countryIso = mDefaultCountryIso;
@@ -508,11 +516,11 @@ public class CallDetailActivity extends AnalyticsActivity implements ProximitySe
             // If this is not a regular number, there is no point in looking it up in the contacts.
             ContactInfo info =
                     PhoneNumberUtilsWrapper.canPlaceCallsTo(number, numberPresentation)
-                    && !new PhoneNumberUtilsWrapper().isVoicemailNumber(number)
+                    && !new PhoneNumberUtilsWrapper().isVoicemailNumber(subId, number)
                             ? mContactInfoHelper.lookupNumber(number, countryIso)
                             : null;
             if (info == null) {
-                formattedNumber = mPhoneNumberHelper.getDisplayNumber(number,
+                formattedNumber = mPhoneNumberHelper.getDisplayNumber(subId, number,
                         numberPresentation, null);
                 nameText = "";
                 numberType = 0;
@@ -538,7 +546,7 @@ public class CallDetailActivity extends AnalyticsActivity implements ProximitySe
                     formattedNumber, countryIso, geocode,
                     new int[]{ callType }, date, duration,
                     nameText, numberType, numberLabel, lookupUri, photoUri, sourceType,
-                    accountLabel, null, features, dataUsage, transcription, durationType);
+                    accountLabel, null, features, dataUsage, transcription, subId, durationType);
         } finally {
             if (callCursor != null) {
                 callCursor.close();

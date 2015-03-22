@@ -268,8 +268,11 @@ public class DialpadFragment extends AnalyticsFragment
                 // onscreen, but useless...)
                 showDialpadChooser(false);
             }
-            if (state == TelephonyManager.CALL_STATE_IDLE && getActivity() != null) {
-                ((HostInterface) getActivity()).setConferenceDialButtonVisibility(true);
+            if (state == TelephonyManager.CALL_STATE_IDLE) {
+                final Activity activity = getActivity();
+                if (activity != null) {
+                    ((HostInterface) activity).setConferenceDialButtonVisibility(true);
+                }
             }
         }
     };
@@ -628,6 +631,28 @@ public class DialpadFragment extends AnalyticsFragment
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        // if the mToneGenerator creation fails, just continue without it.  It is
+        // a local audio signal, and is not as important as the dtmf tone itself.
+        final long start = System.currentTimeMillis();
+        synchronized (mToneGeneratorLock) {
+            if (mToneGenerator == null) {
+                try {
+                    mToneGenerator = new ToneGenerator(DIAL_TONE_STREAM_TYPE, TONE_RELATIVE_VOLUME);
+                } catch (RuntimeException e) {
+                    Log.w(TAG, "Exception caught while creating local tone generator: " + e);
+                    mToneGenerator = null;
+                }
+            }
+        }
+        final long total = System.currentTimeMillis() - start;
+        if (total > 50) {
+            Log.i(TAG, "Time for ToneGenerator creation: " + total);
+        }
+    };
+
+    @Override
     public void onResume() {
         super.onResume();
 
@@ -654,20 +679,6 @@ public class DialpadFragment extends AnalyticsFragment
         mHaptic.checkSystemSetting();
 
         stopWatch.lap("hptc");
-
-        // if the mToneGenerator creation fails, just continue without it.  It is
-        // a local audio signal, and is not as important as the dtmf tone itself.
-        synchronized (mToneGeneratorLock) {
-            if (mToneGenerator == null) {
-                try {
-                    mToneGenerator = new ToneGenerator(DIAL_TONE_STREAM_TYPE, TONE_RELATIVE_VOLUME);
-                } catch (RuntimeException e) {
-                    Log.w(TAG, "Exception caught while creating local tone generator: " + e);
-                    mToneGenerator = null;
-                }
-            }
-        }
-        stopWatch.lap("tg");
 
         mPressedDialpadKeys.clear();
 
@@ -738,12 +749,6 @@ public class DialpadFragment extends AnalyticsFragment
         stopTone();
         mPressedDialpadKeys.clear();
 
-        synchronized (mToneGeneratorLock) {
-            if (mToneGenerator != null) {
-                mToneGenerator.release();
-                mToneGenerator = null;
-            }
-        }
         // TODO: I wonder if we should not check if the AsyncTask that
         // lookup the last dialed number has completed.
         mLastNumberDialed = EMPTY_NUMBER;  // Since we are going to query again, free stale number.
@@ -754,6 +759,13 @@ public class DialpadFragment extends AnalyticsFragment
     @Override
     public void onStop() {
         super.onStop();
+
+        synchronized (mToneGeneratorLock) {
+            if (mToneGenerator != null) {
+                mToneGenerator.release();
+                mToneGenerator = null;
+            }
+        }
 
         if (mClearDigitsOnStop) {
             mClearDigitsOnStop = false;
@@ -1302,7 +1314,8 @@ public class DialpadFragment extends AnalyticsFragment
                     mRecipients.getText().toString().trim();
             if (isDigitsShown && isDigitsEmpty()) {
                 handleDialButtonClickWithEmptyDigits();
-            } else if (isDigitsEmpty() && mRecipients.isShown() && isRecipientEmpty()) {
+            } else if (mAddParticipant && isDigitsEmpty() && mRecipients.isShown()
+                    && isRecipientEmpty()) {
                 // mRecipients must be empty
                 // TODO add support for conference URI in last number dialed
                 // use ErrorDialogFragment instead? also see
@@ -1791,7 +1804,7 @@ public class DialpadFragment extends AnalyticsFragment
         if (promptEnabled) {
             return hasVMNumber();
         } else {
-            long subId = SubscriptionManager.getDefaultVoiceSubId();
+            int subId = SubscriptionManager.getDefaultVoiceSubId();
             try {
                 return getTelephonyManager().getVoiceMailNumber(subId) != null;
             } catch (SecurityException se) {
@@ -1807,7 +1820,7 @@ public class DialpadFragment extends AnalyticsFragment
         int phoneCount = getTelephonyManager().getPhoneCount();
         for (int i = 0; i < phoneCount; i++) {
             try {
-                long[] subId = SubscriptionManager.getSubId(i);
+                int[] subId = SubscriptionManager.getSubId(i);
                 hasVMNum = getTelephonyManager().getVoiceMailNumber(subId[0]) != null;
             } catch (SecurityException se) {
                 // Possibly no READ_PHONE_STATE privilege.

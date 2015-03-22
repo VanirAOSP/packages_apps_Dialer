@@ -20,14 +20,19 @@ import android.accounts.Account;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.Loader;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
+import android.database.sqlite.SQLiteFullException;
 import android.net.Uri;
 import android.provider.CallLog.Calls;
+import android.provider.ContactsContract;
 import android.provider.ContactsContract.PhoneLookup;
 import android.telecom.PhoneAccountHandle;
+import android.telephony.SubscriptionManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.AccessibilityDelegate;
@@ -43,6 +48,8 @@ import com.android.common.widget.GroupingListAdapter;
 import com.android.contacts.common.CallUtil;
 import com.android.contacts.common.ContactPhotoManager;
 import com.android.contacts.common.ContactPhotoManager.DefaultImageRequest;
+import com.android.contacts.common.model.Contact;
+import com.android.contacts.common.model.ContactLoader;
 import com.android.contacts.common.util.UriUtils;
 import com.android.dialer.DialtactsActivity;
 import com.android.dialer.PhoneCallDetails;
@@ -55,6 +62,7 @@ import com.android.dialer.calllog.CallLogAdapterHelper.NumberWithCountryIso;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -63,6 +71,7 @@ import java.util.LinkedList;
  */
 public class CallLogAdapter extends GroupingListAdapter
         implements CallLogAdapterHelper.Callback, CallLogGroupBuilder.GroupCreator {
+    private static final String TAG = CallLogAdapter.class.getSimpleName();
 
     private static final int VOICEMAIL_TRANSCRIPTION_MAX_LINES = 10;
 
@@ -343,6 +352,12 @@ public class CallLogAdapter extends GroupingListAdapter
         final long rowId = c.getLong(CallLogQuery.ID);
         views.rowId = rowId;
 
+        String accId = c.getString(CallLogQuery.ACCOUNT_ID);
+        int subId = SubscriptionManager.DEFAULT_SUBSCRIPTION_ID;
+        if (accId!= null && !accId.equals("E") && !accId.toLowerCase().contains("sip")) {
+             subId = Integer.parseInt(accId);
+        }
+
         // For entries in the call log, check if the day group has changed and display a header
         // if necessary.
         if (mIsCallLog) {
@@ -372,7 +387,7 @@ public class CallLogAdapter extends GroupingListAdapter
         final ContactInfo cachedContactInfo = getContactInfoFromCallLog(c);
 
         final boolean isVoicemailNumber =
-                PhoneNumberUtilsWrapper.INSTANCE.isVoicemailNumber(number);
+                PhoneNumberUtilsWrapper.INSTANCE.isVoicemailNumber(subId, number);
 
         // Where binding and not in the call log, use default behaviour of invoking a call when
         // tapping the primary view.
@@ -435,12 +450,12 @@ public class CallLogAdapter extends GroupingListAdapter
         if (TextUtils.isEmpty(name)) {
             details = new PhoneCallDetails(number, numberPresentation,
                     formattedNumber, countryIso, geocode, callTypes, date,
-                    duration, null, accountIcon, features, dataUsage, transcription);
+                    duration, null, accountIcon, features, dataUsage, transcription, subId);
         } else {
             details = new PhoneCallDetails(number, numberPresentation,
                     formattedNumber, countryIso, geocode, callTypes, date,
                     duration, name, ntype, label, lookupUri, photoUri, sourceType,
-                    null, accountIcon, features, dataUsage, transcription);
+                    null, accountIcon, features, dataUsage, transcription, subId);
         }
 
         mCallLogViewsHelper.setPhoneCallDetails(mContext, views, details);
@@ -458,8 +473,9 @@ public class CallLogAdapter extends GroupingListAdapter
 
         String nameForDefaultImage = null;
         if (TextUtils.isEmpty(name)) {
-            nameForDefaultImage = mPhoneNumberHelper.getDisplayNumber(details.number,
-                    details.numberPresentation, details.formattedNumber).toString();
+            nameForDefaultImage = mPhoneNumberHelper.getDisplayNumber(details.accountId,
+                    details.number, details.numberPresentation,
+                    details.formattedNumber).toString();
         } else {
             nameForDefaultImage = name;
         }
@@ -470,9 +486,11 @@ public class CallLogAdapter extends GroupingListAdapter
             contactAccount = null;
         }
         if (photoId == 0 && photoUri != null) {
-            setPhoto(views, photoUri, lookupUri, nameForDefaultImage, lookupKey, contactType, contactAccount);
+            setPhoto(views, photoUri, lookupUri, nameForDefaultImage, lookupKey, contactType,
+                    contactAccount);
         } else {
-            setPhoto(views, photoId, lookupUri, nameForDefaultImage, lookupKey, contactType, contactAccount);
+            setPhoto(views, photoId, lookupUri, nameForDefaultImage, lookupKey, contactType,
+                    contactAccount);
         }
 
         // Listen for the first draw
@@ -715,7 +733,7 @@ public class CallLogAdapter extends GroupingListAdapter
     }
 
     protected void bindBadge(
-            View view, ContactInfo info, final PhoneCallDetails details, int callType) {
+            View view, final ContactInfo info, final PhoneCallDetails details, int callType) {
         // Do not show badge in call log.
         if (!mIsCallLog) {
             final ViewStub stub = (ViewStub) view.findViewById(R.id.link_stub);
@@ -731,9 +749,18 @@ public class CallLogAdapter extends GroupingListAdapter
                 mBadgeContainer.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        final Intent intent =
-                                DialtactsActivity.getAddNumberToContactIntent(details.number);
-                        mContext.startActivity(intent);
+                            // If no lookup uri is provided, we need to rely on what information
+                            // we have available; namely the phone number and name.
+                            if (info.lookupUri == null) {
+                                final Intent intent =
+                                        DialtactsActivity.getAddToContactIntent(details.name,
+                                                details.number,
+                                                details.numberType);
+                                DialerUtils.startActivityWithErrorToast(mContext, intent,
+                                        R.string.add_contact_not_available);
+                            } else {
+                                addContactFromLookupUri(info.lookupUri);
+                            }
                     }
                 });
                 mBadgeImageView.setImageResource(R.drawable.ic_person_add_24dp);
@@ -814,14 +841,18 @@ public class CallLogAdapter extends GroupingListAdapter
 
         if (!needsUpdate) return;
 
-        if (countryIso == null) {
-            mContext.getContentResolver().update(Calls.CONTENT_URI_WITH_VOICEMAIL, values,
-                    Calls.NUMBER + " = ? AND " + Calls.COUNTRY_ISO + " IS NULL",
-                    new String[]{ number });
-        } else {
-            mContext.getContentResolver().update(Calls.CONTENT_URI_WITH_VOICEMAIL, values,
-                    Calls.NUMBER + " = ? AND " + Calls.COUNTRY_ISO + " = ?",
-                    new String[]{ number, countryIso });
+        try {
+            if (countryIso == null) {
+                mContext.getContentResolver().update(Calls.CONTENT_URI_WITH_VOICEMAIL, values,
+                        Calls.NUMBER + " = ? AND " + Calls.COUNTRY_ISO + " IS NULL",
+                        new String[]{ number });
+            } else {
+                mContext.getContentResolver().update(Calls.CONTENT_URI_WITH_VOICEMAIL, values,
+                        Calls.NUMBER + " = ? AND " + Calls.COUNTRY_ISO + " = ?",
+                        new String[]{ number, countryIso });
+            }
+        } catch (SQLiteFullException e) {
+            Log.e(TAG, "Unable to update contact info in call log db", e);
         }
     }
 
@@ -1053,6 +1084,55 @@ public class CallLogAdapter extends GroupingListAdapter
                 mPreviouslyExpanded = NONE_EXPANDED;
             }
         }
+    }
+
+    /**
+     * Invokes the "add contact" activity given the expanded contact information stored in a
+     * lookup URI.  This can include, for example, address and website information.
+     *
+     * @param lookupUri The lookup URI.
+     */
+    private void addContactFromLookupUri(Uri lookupUri) {
+        Contact contactToSave = ContactLoader.parseEncodedContactEntity(lookupUri);
+        if (contactToSave == null) {
+            return;
+        }
+
+        // Note: This code mirrors code in Contacts/QuickContactsActivity.
+        final Intent intent = new Intent(Intent.ACTION_INSERT_OR_EDIT);
+        intent.setType(ContactsContract.Contacts.CONTENT_ITEM_TYPE);
+
+        ArrayList<ContentValues> values = contactToSave.getContentValues();
+        // Only pre-fill the name field if the provided display name is an nickname
+        // or better (e.g. structured name, nickname)
+        if (contactToSave.getDisplayNameSource()
+                >= ContactsContract.DisplayNameSources.NICKNAME) {
+            intent.putExtra(ContactsContract.Intents.Insert.NAME,
+                    contactToSave.getDisplayName());
+        } else if (contactToSave.getDisplayNameSource()
+                == ContactsContract.DisplayNameSources.ORGANIZATION) {
+            // This is probably an organization. Instead of copying the organization
+            // name into a name entry, copy it into the organization entry. This
+            // way we will still consider the contact an organization.
+            final ContentValues organization = new ContentValues();
+            organization.put(ContactsContract.CommonDataKinds.Organization.COMPANY,
+                    contactToSave.getDisplayName());
+            organization.put(ContactsContract.Data.MIMETYPE,
+                    ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE);
+            values.add(organization);
+        }
+
+        // Last time used and times used are aggregated values from the usage stat
+        // table. They need to be removed from data values so the SQL table can insert
+        // properly
+        for (ContentValues value : values) {
+            value.remove(ContactsContract.Data.LAST_TIME_USED);
+            value.remove(ContactsContract.Data.TIMES_USED);
+        }
+        intent.putExtra(ContactsContract.Intents.Insert.DATA, values);
+
+        DialerUtils.startActivityWithErrorToast(mContext, intent,
+                R.string.add_contact_not_available);
     }
 
     public void setQueryString(String filter) {

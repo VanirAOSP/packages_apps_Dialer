@@ -73,23 +73,23 @@ public class MSimCallLogFragment extends CallLogFragment
     /**
      * Key for the call log sub saved in the default preference.
      */
-    private static final String PREFERENCE_KEY_CALLLOG_SUB = "call_log_sub";
+    private static final String PREFERENCE_KEY_CALLLOG_SLOT = "call_log_slot";
 
     // Add and change for filter call log.
-    private Spinner mFilterSubSpinnerView;
+    private Spinner mFilterSlotSpinnerView;
     private Spinner mFilterStatusSpinnerView;
 
     // Default to all slots.
-    private int mCallSubFilter = CallLogQueryHandler.CALL_SUB_ALL;
+    private int mCallSlotFilter = CallLogQueryHandler.CALL_SIM_ALL;
 
     private OnItemSelectedListener mSubSelectedListener = new OnItemSelectedListener() {
 
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            Log.i(TAG, "Sub selected, position: " + position);
-            int sub = position - 1;
-            mCallSubFilter = sub;
-            setSelectedSub(sub);
+            Log.i(TAG, "Slot selected, position: " + position);
+            int slot = position - 1;
+            mCallSlotFilter = slot;
+            setSelectedSlot(slot);
             fetchCalls();
         }
 
@@ -137,7 +137,7 @@ public class MSimCallLogFragment extends CallLogFragment
         mStatusMessageText = (TextView) view.findViewById(R.id.voicemail_status_message);
         mStatusMessageAction = (TextView) view.findViewById(R.id.voicemail_status_action);
 
-        mFilterSubSpinnerView = (Spinner) view.findViewById(R.id.filter_sub_spinner);
+        mFilterSlotSpinnerView = (Spinner) view.findViewById(R.id.filter_sub_spinner);
         mFilterStatusSpinnerView = (Spinner) view.findViewById(R.id.filter_status_spinner);
         mDateFilterView = (TextView) view.findViewById(R.id.date_filter);
 
@@ -149,7 +149,7 @@ public class MSimCallLogFragment extends CallLogFragment
 
     @Override
     public void fetchCalls() {
-        fetchCalls(mFilterFrom, mFilterTo, mCallSubFilter);
+        fetchCalls(mFilterFrom, mFilterTo, mCallSlotFilter);
     }
 
     @Override
@@ -162,7 +162,7 @@ public class MSimCallLogFragment extends CallLogFragment
      * Initialize the filter views content.
      */
     private void updateFilterSpinnerViews() {
-        if (mFilterSubSpinnerView == null
+        if (mFilterSlotSpinnerView == null
                 || mFilterStatusSpinnerView == null) {
             Log.w(TAG, "The filter spinner view is null!");
             return;
@@ -171,20 +171,20 @@ public class MSimCallLogFragment extends CallLogFragment
         final TelephonyManager telephony = (TelephonyManager) getActivity().getSystemService(
                 Context.TELEPHONY_SERVICE);
         if (!telephony.isMultiSimEnabled()) {
-            mFilterSubSpinnerView.setVisibility(View.GONE);
+            mFilterSlotSpinnerView.setVisibility(View.GONE);
         } else {
             // Update the sub filter's content.
-            ArrayAdapter<SpinnerContent> filterSubAdapter = new ArrayAdapter<SpinnerContent>(
+            ArrayAdapter<SpinnerContent> filterSlotAdapter = new ArrayAdapter<SpinnerContent>(
                     this.getActivity(), R.layout.call_log_spinner_item,
-                    SpinnerContent.setupSubFilterContent(getActivity()));
+                    SpinnerContent.setupSlotFilterContent(getActivity()));
 
-            if (filterSubAdapter.getCount() <= 1) {
-                mFilterSubSpinnerView.setVisibility(View.GONE);
+            if (filterSlotAdapter.getCount() <= 1) {
+                mFilterSlotSpinnerView.setVisibility(View.GONE);
             } else {
-                mCallSubFilter = getSelectedSub();
-                mFilterSubSpinnerView.setAdapter(filterSubAdapter);
-                mFilterSubSpinnerView.setOnItemSelectedListener(mSubSelectedListener);
-                SpinnerContent.setSpinnerContentValue(mFilterSubSpinnerView, mCallSubFilter);
+                mCallSlotFilter = getSelectedSlot();
+                mFilterSlotSpinnerView.setAdapter(filterSlotAdapter);
+                mFilterSlotSpinnerView.setOnItemSelectedListener(mSlotSelectedListener);
+                SpinnerContent.setSpinnerContentValue(mFilterSlotSpinnerView, mCallSlotFilter);
             }
         }
 
@@ -198,22 +198,22 @@ public class MSimCallLogFragment extends CallLogFragment
     }
 
     /**
-     * @return the saved selected subscription.
+     * @return the saved selected slot.
      */
-    private int getSelectedSub() {
+    private int getSelectedSlot() {
         // Get the saved selected sub, and the default value is display all.
-        int sub = PreferenceManager.getDefaultSharedPreferences(this.getActivity()).getInt(
-                PREFERENCE_KEY_CALLLOG_SUB, CallLogQueryHandler.CALL_SUB_ALL);
-        return sub;
+        int slot = PreferenceManager.getDefaultSharedPreferences(this.getActivity()).getInt(
+                PREFERENCE_KEY_CALLLOG_SLOT, CallLogQueryHandler.CALL_SIM_ALL);
+        return slot;
     }
 
     /**
-     * Save the selected subscription to preference.
+     * Save the selected slot to preference.
      */
-    private void setSelectedSub(int sub) {
+    private void setSelectedSlot(int slot) {
         // Save the selected sub to the default preference.
         PreferenceManager.getDefaultSharedPreferences(this.getActivity()).edit()
-                .putInt(PREFERENCE_KEY_CALLLOG_SUB, sub).commit();
+                .putInt(PREFERENCE_KEY_CALLLOG_SLOT, slot).commit();
     }
 
     @Override

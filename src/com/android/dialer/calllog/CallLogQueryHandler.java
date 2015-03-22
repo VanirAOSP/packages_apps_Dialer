@@ -72,7 +72,7 @@ public class CallLogQueryHandler extends NoNullCursorAsyncQueryHandler {
     /**
      * To specify all slots.
      */
-    public static final int CALL_SUB_ALL = -1;
+    public static final int CALL_SIM_ALL = -1;
 
     private final WeakReference<Listener> mListener;
 
@@ -129,9 +129,9 @@ public class CallLogQueryHandler extends NoNullCursorAsyncQueryHandler {
         fetchCalls(QUERY_CALLLOG_TOKEN, callType, false /* newOnly */, 0, newerThan);
     }
 
-    public void fetchCalls(int callType, long newerThan, int sub) {
+    public void fetchCalls(int callType, long newerThan, int slot) {
         cancelFetch();
-        fetchCalls(QUERY_CALLLOG_TOKEN, callType, false /* newOnly */, 0, newerThan, sub);
+        fetchCalls(QUERY_CALLLOG_TOKEN, callType, false /* newOnly */, 0, newerThan, slot);
     }
 
     public void fetchCalls(int callType) {
@@ -190,8 +190,8 @@ public class CallLogQueryHandler extends NoNullCursorAsyncQueryHandler {
             selectionArgs.add(Integer.toString(callType));
         }
 
-        if (slotId > CALL_SUB_ALL) {
-            long[] subId = SubscriptionManager.getSubId(slotId);
+        if (slotId > CALL_SIM_ALL) {
+            int[] subId = SubscriptionManager.getSubId(slotId);
             if (subId != null && subId.length >= 1) {
                 if (where.length() > 0) {
                     where.append(" AND ");

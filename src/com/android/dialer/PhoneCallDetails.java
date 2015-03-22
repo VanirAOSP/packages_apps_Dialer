@@ -22,6 +22,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.CallLog.Calls;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
+import android.telephony.SubscriptionManager;
 
 /**
  * The details of a phone call to be shown in the UI.
@@ -75,6 +76,10 @@ public class PhoneCallDetails implements CallDetailHeader.Data {
      */
     public final Drawable accountIcon;
     /**
+     * The account id associated with the call.
+     */
+    public final int accountId;
+    /**
      * Features applicable to this call.
      */
     public final int features;
@@ -86,6 +91,11 @@ public class PhoneCallDetails implements CallDetailHeader.Data {
      * Voicemail transcription
      */
     public final String transcription;
+    /**
+     * Default phone Id
+     */
+    public final static int DEFAULT_PHONE_ID = 0;
+
     /**
      * Duration type for this call.
      */
@@ -100,7 +110,8 @@ public class PhoneCallDetails implements CallDetailHeader.Data {
             CharSequence formattedNumber, String countryIso, String geocode,
             int[] callTypes, long date, long duration) {
         this (number, numberPresentation, formattedNumber, countryIso, geocode,
-        callTypes, date, duration, "", 0, "", null, null, 0, null, null, 0, null, null);
+                callTypes, date, duration, "", 0, "", null, null, 0, null, null, 0, null, null,
+                DEFAULT_PHONE_ID);
     }
 
     /** Create the details for a call with a number not associated with a contact. */
@@ -110,20 +121,29 @@ public class PhoneCallDetails implements CallDetailHeader.Data {
             int features, Long dataUsage, String transcription) {
         this(number, numberPresentation, formattedNumber, countryIso, geocode,
                 callTypes, date, duration, "", 0, "", null, null, 0, accountLabel, accountIcon,
-                features, dataUsage, transcription);
+                features, dataUsage, transcription, DEFAULT_PHONE_ID);
     }
 
-    /** Create the details for a call with a number associated with a contact. */
+    /** Create the details for a call with a number not associated with a contact. */
+    public PhoneCallDetails(CharSequence number, int numberPresentation,
+            CharSequence formattedNumber, String countryIso, String geocode,
+            int[] callTypes, long date, long duration, String accountLabel, Drawable accountIcon,
+            int features, Long dataUsage, String transcription, int accountId) {
+        this(number, numberPresentation, formattedNumber, countryIso, geocode,
+                callTypes, date, duration, "", 0, "", null, null, 0, accountLabel, accountIcon,
+                features, dataUsage, transcription, accountId);
+    }
+
     public PhoneCallDetails(CharSequence number, int numberPresentation,
             CharSequence formattedNumber, String countryIso, String geocode,
             int[] callTypes, long date, long duration, CharSequence name,
             int numberType, CharSequence numberLabel, Uri contactUri,
             Uri photoUri, int sourceType, String accountLabel, Drawable accountIcon, int features,
             Long dataUsage, String transcription) {
-        this(number, numberPresentation, formattedNumber, countryIso, geocode,
-                callTypes, date, duration, name, numberType, numberLabel, contactUri,
-                photoUri, sourceType, accountLabel, accountIcon, features, dataUsage,
-                transcription, Calls.DURATION_TYPE_ACTIVE);
+       this(number, numberPresentation, formattedNumber, countryIso, geocode, callTypes,
+               date, duration, name, numberType, numberLabel, contactUri, photoUri, sourceType,
+               accountLabel, accountIcon, features, dataUsage, transcription, DEFAULT_PHONE_ID,
+               Calls.DURATION_TYPE_ACTIVE);
     }
 
     /** Create the details for a call with a number associated with a contact. */
@@ -132,7 +152,7 @@ public class PhoneCallDetails implements CallDetailHeader.Data {
             int[] callTypes, long date, long duration, CharSequence name,
             int numberType, CharSequence numberLabel, Uri contactUri,
             Uri photoUri, int sourceType, String accountLabel, Drawable accountIcon, int features,
-            Long dataUsage, String transcription, int durationType) {
+            Long dataUsage, String transcription, int accountId, int durationType) {
         this.number = number;
         this.numberPresentation = numberPresentation;
         this.formattedNumber = formattedNumber;
@@ -152,6 +172,7 @@ public class PhoneCallDetails implements CallDetailHeader.Data {
         this.features = features;
         this.dataUsage = dataUsage;
         this.transcription = transcription;
+        this.accountId = accountId;
         this.durationType = durationType;
     }
 
