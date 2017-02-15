@@ -202,6 +202,10 @@ public class InCallActivity extends TransactionSafeActivity implements FragmentD
         // TODO(klp): Do we need to add this back when prox sensor is not available?
         // lp.inputFeatures |= WindowManager.LayoutParams.INPUT_FEATURE_DISABLE_USER_ACTIVITY;
 
+        // Since activity is created newly, clear full screen flag. This will ensure that
+        // the flag is in sync with actual UI when UI is recreated due to orientation change.
+        InCallPresenter.getInstance().clearFullscreen();
+
         setContentView(R.layout.incall_screen);
 
         internalResolveIntent(getIntent());
@@ -293,8 +297,8 @@ public class InCallActivity extends TransactionSafeActivity implements FragmentD
         InCallPresenter.getInstance().setThemeColors();
         InCallPresenter.getInstance().onUiShowing(true);
 
-        // Clear fullscreen state onResume; the stored value may not match reality.
-        InCallPresenter.getInstance().clearFullscreen();
+        // Exit fullscreen state onResume; the stored value may not match reality.
+        InCallPresenter.getInstance().setFullScreen(false);
 
         // If there is a pending request to show or hide the dialpad, handle that now.
         if (mShowDialpadRequest != DIALPAD_REQUEST_NONE) {
