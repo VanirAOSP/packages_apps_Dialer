@@ -113,7 +113,6 @@ public class InCallPresenter implements CallList.Listener,
 
     private AudioModeProvider mAudioModeProvider;
     private StatusBarNotifier mStatusBarNotifier;
-    private InCallVibrationHandler mInCallVibrationHandler;
     private ExternalCallNotifier mExternalCallNotifier;
     private InCallVibrationHandler mInCallVibrationHandler;
     private ContactInfoCache mContactInfoCache;
